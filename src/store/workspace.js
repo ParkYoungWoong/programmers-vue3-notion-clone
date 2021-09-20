@@ -5,7 +5,8 @@ export default {
   state() {
     return {
       workspaces: [],
-      currentWorkspace: {}
+      currentWorkspace: {},
+      currentWorkspacePath: []
     }
   },
   getters: {},

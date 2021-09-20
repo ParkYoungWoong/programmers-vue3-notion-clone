@@ -68,6 +68,10 @@ export default {
       return this.workspace.documents && this.workspace.documents.length
     }
   },
+  created() {
+    // 자신(컴포넌트)이 현재 워크스페이스 경로에 해당하는 항목이 맞는지 체크!
+    this.showChildren = this.$store.state.workspace.currentWorkspacePath.includes(this.workspace.id)
+  },
   methods: {
     async createWorkspace() {
       await this.$store.dispatch('workspace/createWorkspace', {

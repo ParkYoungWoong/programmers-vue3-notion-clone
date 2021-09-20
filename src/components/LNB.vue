@@ -4,7 +4,7 @@
       <div class="user-profile"></div>
       Leon의 Notion
     </div>
-    <ul>
+    <ul v-if="done">
       <WorkspaceItem
         v-for="workspace in workspaces"
         :key="workspace.id"
@@ -27,13 +27,36 @@ export default {
   components: {
     WorkspaceItem
   },
+  data() {
+    return {
+      done: false
+    }
+  },
   computed: {
     workspaces() {
       return this.$store.state.workspace.workspaces
     }
   },
   created() {
-    this.$store.dispatch('workspace/readWorkspaces')
+    this.init()
+  },
+  methods: {
+    async init() {
+      await this.$store.dispatch('workspace/readWorkspaces')
+      const currentWorkspaceId = parseInt(this.$route.params.id, 10)
+      const foundWorkspace = (workspace, parents = []) => {
+        if (currentWorkspaceId === workspace.id) {
+          this.$store.commit('workspace/assignState', {
+            currentWorkspacePath: [...parents, workspace.id]
+          })
+        }
+        if (workspace.documents) {
+          workspace.documents.forEach(ws => foundWorkspace(ws, [...parents, workspace.id]))
+        }
+      }
+      this.workspaces.forEach(workspace => foundWorkspace(workspace))
+      this.done = true
+    }
   }
 }
 </script>
