@@ -3,7 +3,7 @@
     <LNB />
     <div class="app__page">
       <Header />
-      <div class="container">
+      <div class="page__container">
         <RouterView />
       </div>
     </div>
@@ -35,7 +35,7 @@ export default {
     display: flex;
     flex-direction: column;
     height: 100%;
-    .container {
+    .page__container {
       flex-grow: 1;
       overflow-y: auto;
     }

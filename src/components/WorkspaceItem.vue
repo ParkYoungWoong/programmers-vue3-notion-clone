@@ -2,9 +2,14 @@
   <li>
     <div
       :style="{ paddingLeft: `${14 * depth}px` }"
-      :class="{ active: $route.fullPath === `/workspaces/${workspace.id}` }"
+      :class="{ active: parseInt($route.params.id, 10) === workspace.id }"
       class="title"
-      @click="$router.push(`/workspaces/${workspace.id}`)">
+      @click="$router.push({
+        name: 'Workspace',
+        params: {
+          id: workspace.id
+        }
+      })">
       <span
         :class="{ active: showChildren }"
         class="material-icons"
@@ -12,7 +17,7 @@
         play_arrow
       </span>
       <span class="text">
-        {{ title }}
+        {{ workspace.title || '제목 없음' }}
       </span>
       <div class="actions">
         <span
@@ -61,16 +66,14 @@ export default {
     }
   },
   computed: {
-    title() {
-      return this.workspace.title ? this.workspace.title : '제목 없음'
-    },
     hasChildren() {
       return this.workspace.documents && this.workspace.documents.length
     }
   },
   created() {
-    // 자신(컴포넌트)이 현재 워크스페이스 경로에 해당하는 항목이 맞는지 체크!
-    this.showChildren = this.$store.state.workspace.currentWorkspacePath.includes(this.workspace.id)
+    // 자신(WorkspaceItem.vue)이 현재 워크스페이스 경로에 해당하는 항목이 맞는지 체크!
+    this.showChildren = this.$store.state.workspace.currentWorkspacePath
+        .some(workspace => workspace.id === this.workspace.id)
   },
   methods: {
     async createWorkspace() {
@@ -79,20 +82,10 @@ export default {
       })
       this.showChildren = true
     },
-    async deleteWorkspace() {
-      await this.$store.dispatch('workspace/deleteWorkspace', {
+    deleteWorkspace() {
+      this.$store.dispatch('workspace/deleteWorkspace', {
         id: this.workspace.id
       })
-      // 현재 페이지에서 도큐먼트를 삭제한 경우,
-      // 가지고 있는 첫 번째 도큐먼트 페이지로 이동!
-      if (this.workspace.id === parseInt(this.$route.params.id, 10)) {
-        this.$router.push({
-          name: 'Workspace',
-          params: {
-            id: this.$store.state.workspace.workspaces[0].id
-          }
-        })
-      }
     }
   }
 }
@@ -106,7 +99,8 @@ li {
     display: flex;
     align-items: center;
     white-space: nowrap;
-    padding: 5px 14px;
+    height: 30px;
+    padding: 0 14px;
     position: relative;
     color: rgba($color-font, .7);
     &:hover {
@@ -124,7 +118,7 @@ li {
     }
     .material-icons {
       font-size: 18px;
-      color: #37352f66;
+      color: $color-icon;
       margin-right: 4px;
       &:hover {
         background-color: $color-background--hover2;
@@ -146,7 +140,9 @@ li {
   }
   .no-children {
     color: rgba($color-font, .35);
-    padding: 5px 10px;
+    height: 30px;
+    display: flex;
+    align-items: center;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;

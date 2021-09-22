@@ -1,10 +1,12 @@
 <template>
-  <nav>
+  <nav
+    ref="nav"
+    :style="{ width: `${navWidth}px` }">
     <div class="header">
       <div class="user-profile"></div>
-      Leon의 Notion
+      Leon's Notion
     </div>
-    <ul v-if="done">
+    <ul>
       <WorkspaceItem
         v-for="workspace in workspaces"
         :key="workspace.id"
@@ -17,10 +19,15 @@
         <span class="material-icons">add</span> 새로운 페이지
       </div>
     </div>
+    <div
+      ref="resizeHandle"
+      class="resize-handle"
+      @dblclick="navWidth = 240"></div>
   </nav>
 </template>
 
 <script>
+import interact from 'interactjs'
 import WorkspaceItem from '~/components/WorkspaceItem'
 
 export default {
@@ -29,7 +36,7 @@ export default {
   },
   data() {
     return {
-      done: false
+      navWidth: 240
     }
   },
   computed: {
@@ -38,37 +45,43 @@ export default {
     }
   },
   created() {
-    this.init()
+    this.workspacesInit()
+  },
+  mounted() {
+    this.navInit()
   },
   methods: {
-    async init() {
+    async workspacesInit() {
       await this.$store.dispatch('workspace/readWorkspaces')
-      const currentWorkspaceId = parseInt(this.$route.params.id, 10)
-      const foundWorkspace = (workspace, parents = []) => {
-        if (currentWorkspaceId === workspace.id) {
-          this.$store.commit('workspace/assignState', {
-            currentWorkspacePath: [...parents, workspace.id]
-          })
-        }
-        if (workspace.documents) {
-          workspace.documents.forEach(ws => foundWorkspace(ws, [...parents, workspace.id]))
-        }
-      }
-      this.workspaces.forEach(workspace => foundWorkspace(workspace))
-      this.done = true
+      // console.log(this.$store.state.workspace.currentWorkspacePath)
+    },
+    navInit() {
+      interact(this.$refs.nav)
+        .resizable({
+          edges: {
+            right: this.$refs.resizeHandle
+          }
+        })
+        .on('resizemove', event => {
+          this.navWidth = event.rect.width
+        })
     }
   }
 }
 </script>
 
+
 <style lang="scss" scoped>
 nav {
-  width: 240px;
+  max-width: 500px;
+  min-width: 160px;
   height: 100%;
-  box-sizing: border-box;
   background-color: $color-background;
+  flex-shrink: 0; // 뷰포트 가로 너비가 작을 때 찌그러짐 방지
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: hidden;
   .header {
     padding: 14px;
     font-weight: 700;
@@ -104,6 +117,18 @@ nav {
         margin-right: 4px;
         color: $color-icon;
       }
+    }
+  }
+  .resize-handle {
+    width: 4px;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    cursor: col-resize;
+    transition: .4s;
+    &:hover {
+      background-color: $color-border;
     }
   }
 }
